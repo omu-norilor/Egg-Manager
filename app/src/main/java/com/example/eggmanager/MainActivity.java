@@ -1,6 +1,7 @@
 package com.example.eggmanager;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -23,118 +24,85 @@ public class MainActivity extends Activity {
     private Button btnUpdate;
     private Button btnDelete;
     private ListView listView;
+    private static int index = 0;
 
-    private ArrayList<Egg> eggList = new ArrayList<>();
+    public static ArrayList<Egg> eggList = new ArrayList<>();
     private ArrayAdapter<Egg> adapter;
 
     private Egg selectedEgg = null;
+
+    public static ArrayList<Egg> getEggList() {
+        return eggList;
+    }
+
+    public static void addEgg(Egg egg) {
+        egg.setId(index);
+        eggList.add(egg);
+        index++;
+    }
+
+    public static void updateEgg(Egg updatedEgg) {
+        for (int i = 0; i < eggList.size(); i++) {
+            if (eggList.get(i).getId() == updatedEgg.getId()) {
+                eggList.set(i, updatedEgg);
+                break;
+            }
+        }
+    }
+
+    public static Egg getEgg(int eggId) {
+        for (Egg egg : eggList) {
+            if (egg.getId() == eggId) {
+                return egg;
+            }
+        }
+        return null;
+    }
+
+    public static void deleteEgg(int eggId) {
+        for (Egg egg : eggList) {
+            if (egg.getId() == eggId) {
+                eggList.remove(egg);
+                break;
+            }
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Button btnCreateEgg = findViewById(R.id.btnCreateEgg);
+        Button btnReadEggs = findViewById(R.id.btnReadEggs);
 
-        editTextName = findViewById(R.id.editTextName);
-        editTextSpecies = findViewById(R.id.editTextSpecies);
-        spinnerSize = findViewById(R.id.spinnerSize);
-        editTextDaysToHatch = findViewById(R.id.editTextDaysToHatch);
-        btnCreate = findViewById(R.id.btnCreate);
-        btnRead = findViewById(R.id.btnRead);
-        btnUpdate = findViewById(R.id.btnUpdate);
-        btnDelete = findViewById(R.id.btnDelete);
-        listView = findViewById(R.id.listView);
+        // insert some realistic eggs
+        Egg egg1 = new Egg("Mirela", "Gallus gallus domesticus", "Medium", 15);
+        Egg egg2 = new Egg("Doru", "Falco", "Small", 3);
+        Egg egg3 = new Egg("Ionica", "Dromaius novaehollandiae", "Large", 30);
+        Egg egg4 = new Egg("Janos", "Paridae", "Small", 22);
 
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, eggList);
-        listView.setAdapter(adapter);
-
-        // Populate the spinner with the size options
-        ArrayAdapter<CharSequence> sizeAdapter = ArrayAdapter.createFromResource(this, R.array.size_array, android.R.layout.simple_spinner_item);
-        sizeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerSize.setAdapter(sizeAdapter);
-
-
-        btnCreate.setOnClickListener(new View.OnClickListener() {
+        eggList.add(egg1);
+        eggList.add(egg2);
+        eggList.add(egg3);
+        eggList.add(egg4);
+        
+        btnCreateEgg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String name = editTextName.getText().toString();
-                String species = editTextSpecies.getText().toString();
-                String size = spinnerSize.getSelectedItem().toString();
-                int daysToHatch = Integer.parseInt(editTextDaysToHatch.getText().toString());
-
-                Egg newEgg = new Egg(name, species, size, daysToHatch);
-                eggList.add(newEgg);
-                adapter.notifyDataSetChanged();
-
-                editTextName.setText("");
-                editTextSpecies.setText("");
-                spinnerSize.setSelection(0);
-                editTextDaysToHatch.setText("");
+                // Start the Create Egg activity
+                Intent intent = new Intent(MainActivity.this, CreateEggActivity.class);
+                startActivity(intent);
             }
         });
 
-        btnRead.setOnClickListener(new View.OnClickListener() {
+        btnReadEggs.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (eggList.isEmpty()) {
-                    Toast.makeText(getApplicationContext(), "No eggs available.", Toast.LENGTH_SHORT).show();
-                } else {
-                    // Display the list of eggs (toString method in Egg class is used for display)
-                    for (Egg egg : eggList) {
-                        Toast.makeText(getApplicationContext(), egg.toString(), Toast.LENGTH_SHORT).show();
-                    }
-                }
+                // Start the Read Eggs activity
+                Intent intent = new Intent(MainActivity.this, ReadEggsActivity.class);
+                startActivity(intent);
             }
         });
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-                selectedEgg = eggList.get(position);
-                editTextName.setText(selectedEgg.getName());
-                editTextSpecies.setText(selectedEgg.getSpecies());
-                spinnerSize.setSelection(sizeAdapter.getPosition(selectedEgg.getSize()));
-                editTextDaysToHatch.setText(String.valueOf(selectedEgg.getDaysToHatch()));
-                Toast.makeText(getApplicationContext(), "Selected Egg: " + selectedEgg.getName(), Toast.LENGTH_SHORT).show();
-                btnUpdate.setText("Update");
-            }
-        });
-
-        btnUpdate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (selectedEgg != null) {
-                    String name = editTextName.getText().toString();
-                    String species = editTextSpecies.getText().toString();
-                    String size = spinnerSize.getSelectedItem().toString();
-                    int daysToHatch = Integer.parseInt(editTextDaysToHatch.getText().toString());
-
-                    selectedEgg.setName(name);
-                    selectedEgg.setSpecies(species);
-                    selectedEgg.setSize(size);
-                    selectedEgg.setDaysToHatch(daysToHatch);
-
-                    adapter.notifyDataSetChanged();
-
-                    editTextName.setText("");
-                    editTextSpecies.setText("");
-                    spinnerSize.setSelection(0);
-                    editTextDaysToHatch.setText("");
-                    selectedEgg = null;
-                    btnUpdate.setText("Save Update");
-                }
-            }
-        });
-
-        btnDelete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (selectedEgg != null) {
-                    eggList.remove(selectedEgg);
-                    adapter.notifyDataSetChanged();
-                    selectedEgg = null;
-                    btnUpdate.setText("Update");
-                }
-            }
-        });
     }
 }
